@@ -1,0 +1,28 @@
+@charset "UTF-8";
+
+//@import url('https://fonts.googleapis.com/css?family=Fira+Mono|Lato|Open+Sans|Raleway|Roboto|Roboto+Mono|Source+Code+Pro|Ubuntu+Mono');
+
+@import "fa_boiler.css";
+@import "icomoon_cogs.css";
+@import "variables.scss";
+@import "~bulma/bulma.sass";
+
+.section {
+	padding: 1.5rem 0;
+}
+
+.greentext {
+  color: $--color-greentext;
+}
+
+.headline {
+  position: relative;
+  z-index: 10;
+  color: $--color-title;
+  @include float-shadow-text;
+	background: transparent;
+  padding: 0.25rem;
+  font-weight: normal;
+  margin: 0 !important;
+  text-align: center;
+}
