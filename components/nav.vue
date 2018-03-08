@@ -1,11 +1,33 @@
 <template>
-  <div class="nav-component">
-    <div class="container">
-      <div class="title-and-description">
-        <div class="site-title">{{ url }}</div>
-        <div class="site-description is-hidden-mobile">Currently {{ combinedBoardStats.postsPerMinute.toFixed(2) }} posts/minute with ~{{ Math.round(combinedBoardStats.avgPostsPerDay / 1000) }}k posts/day</div>
-      </div>
+  <div class="component-nav">
+		
+    <div class="title-and-description">
+      <router-link to="/">
+        <div class="site-title">4stats.io</div>
+      </router-link>
+      <div class="site-description is-hidden-mobile">Currently {{ combinedBoardStats.postsPerMinute.toFixed(2) }} posts/minute with ~{{ Math.round(combinedBoardStats.avgPostsPerDay / 1000) }}k posts/day</div>
     </div>
+
+    <no-ssr>
+      <router-link :to="this.$route.path != '/config' ? '/config' : '/'">
+        <button class="config-button" @click="showConfig = true">
+          <template v-if="this.$route.path != '/config'">
+            <span class="icon">
+              <i class="fa-lg fa-cog"/>
+            </span>
+            <span class="config-button-text">
+              Boards
+            </span>
+          </template>
+          <template v-else>
+            <span class="config-button-text">
+              Save ✔
+            </span>
+          </template>
+        </button>
+      </router-link>
+    </no-ssr>
+			
   </div>
 </template>
 
@@ -25,19 +47,23 @@ export default {
 <style scoped lang="scss">
 @import "~assets/css/variables.scss";
 
-.nav-component{
+.component-nav{
+	z-index: 10;
 	position: relative;
 	background: $--color-navbar;
 	color: $--color-text;
 	@include tablet{
-		@include float-shadow-box;
+		box-shadow: 0px 0px 12px 0px rgba(0,0,0,0.5);
 	}
-}
-
-.container{
+	padding: 0 1rem;
 	position: relative;
 	display: flex;
 	align-items: center;
+}
+
+a:active, a:focus, button:active, button:focus {
+  outline: 0;
+  border: none;
 }
 
 .title-and-description{
@@ -48,6 +74,7 @@ export default {
 }
 
 .site-title{
+	color: $--color-text;
 	position: relative;
 	line-height: 1.5;
 	@include touch{

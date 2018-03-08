@@ -40,10 +40,10 @@ export default {
 			"boardData",
 			"enabledBoards",
 			"selectedBoard",
-			"sortBoardListBy"
+			"sortBoardListBy",
 		]),
 		sortedBoardlist: function(){
-			const result = Object.keys(this.boardData) // it's fine
+			const result = this.enabledBoards
 			if(this.sortBoardListBy == "name"){
 				result.sort((a, b) => {
 					if (a < b) return -1
@@ -70,12 +70,7 @@ export default {
 		}
 	},
 	created(){
-		//this.enabledBoardsCopy = this.enabledBoards.slice()
-		this.$store.subscribe(mutation => {
-			if(mutation.type == "setEnabledBoards" || mutation.type == "setInitialData"){
-				this.enabledBoardsCopy = this.enabledBoards.slice()
-			}
-		})
+    
 	},
 	mounted(){
 		this.$store.subscribe(mutation => {
@@ -104,6 +99,8 @@ export default {
 @import "~assets/css/variables.scss";
 
 .boardlist-wrapper{
+  //border-top: 4px solid rgba(255,255,255,0.8);
+  //border-top: 4px solid rgba(255,255,255,0.25);
   cursor: pointer;
   user-select: none;
   font-size: 0.8rem;
@@ -112,14 +109,13 @@ export default {
     @include float-shadow-box;
   }
   
-  background-color: $--color-boardlist-header;
+  //background-color: $--color-boardlist-header;
 }
 
 .board-data-wrapper{
   display: flex;
-  color: $--color-text-minor;
-
   &>.board-data{
+    color: $--color-text-minor;
     flex: 2 1 0;
     display: flex;
     align-items: center;
@@ -141,7 +137,6 @@ export default {
   //overflow: hidden;
   height: 2.25rem;
   &>.board-data{ // categories
-    color: $--color-text-minor;
     position: relative;
     white-space: nowrap;
     &::before{ // underline when category selected
@@ -170,7 +165,7 @@ export default {
 .board-row{
   position: relative;
   border-top: 1px solid rgba(0,0,0,0.25);
-  transition: background-color 0.5s, transform 0.5s;
+  transition: background-color 0.5s ease-out, transform 0.5s;
   
   background-color: $--color-highlight-2;
   &:nth-of-type(2n){
@@ -179,10 +174,11 @@ export default {
 
   &>.board-data-wrapper{
     height: 1.25rem;
-    
     &.board-selected{
-      background-color: $--color-selected;
-      color: $oc-gray-7;
+      background-color: $--color-background-selected;
+      >.board-data{
+        color: $--color-text-selected;
+      }
     }
   }
 }
@@ -220,7 +216,13 @@ export default {
 // Animations //
 ////////////////
 .flip-list-move {
-  transition: transform 0.5s ease-out;
+  //transition: transform 0.5s ease-out, background-color 0.1s ease;
+  transition: transform 1s ease-out, background-color 0.1s ease;
+  &.board-row{
+    position: relative;
+    //transform: translateX(-12px);
+    //background-color: rgba(0,0,0,0.0);
+  }
 }
 
 .just-updated {

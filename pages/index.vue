@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Component-nav/>
+		
     <div class="main">
       <no-ssr>
         <h6 class="connected is-hidden-touch">
@@ -8,6 +8,12 @@
           users on site: {{ connectedUsers }}
         </h6>
       </no-ssr>
+      <div class="has-text-centered ssr-hint">
+        <p>
+          nuxt.4stats.io is a basic and experimental server-side-rendered version.<br>
+          You can enable javascript and visit <a href="https://4stats.io">https://4stats.io</a> to view the current default site.
+        </p>
+      </div>
       <div class="container is-fullhd">
         <div class="columns">
           <component-boardlist class="column is-12-mobile is-6-tablet"/>
@@ -17,7 +23,7 @@
     </div>
 		
     <no-ssr>
-      <div class="section has-text-centered is-hidden-mobile">
+      <div class="has-text-centered is-hidden-mobile">
         <component-chart class="container" v-if="renderChart || forceChart"/>
         <button v-else @click="forceChart = true" class="button">
           Force-Load Chart Module<br>
@@ -25,8 +31,7 @@
         </button>
       </div>
     </no-ssr>
-
-    <component-footer/>
+		
   </div>
 </template>
 
@@ -41,14 +46,12 @@ export default {
 		forceChart: false,
 		renderChart: process.browser ? window.innerWidth >= 1216 : false, // the bulma breakpoint for desktops
 		recentlyUpdatedBoard: "",
-		connectedUsers: 0
+		connectedUsers: -1
 	}),
 	components: {
-		ComponentNav: require("~/components/nav.vue").default,
 		ComponentBoardlist: require("~/components/boardlist.vue").default,
 		ComponentThreadlist: require("~/components/threadlist.vue").default,
 		ComponentChart: require('~/components/chart.vue').default, // FIXME: lazy loading for relevant screen-width
-		ComponentFooter: require("~/components/footer.vue").default,
 	},
 	beforeRouteUpdate (to, from, next) {
 		if(Object.keys(to.query).length){
@@ -60,7 +63,7 @@ export default {
 		}
 	},
 	created(){
-		if(process.browser){
+		if(process.browser){			
 			this.$socket.on("allBoardStats",allBoardStats => {
 				pino.debug("Received allBoardStats from API")
 				this.$store.commit("setInitialData",allBoardStats)
@@ -112,6 +115,7 @@ export default {
 	@include mobile{
 		touch-action: pan-y;
 	}
+	padding-bottom: 2rem;
 }
 
 .main{
@@ -121,6 +125,27 @@ export default {
 	}
 	@include touch{
 		padding-top: 0rem;
+	}
+}
+
+.ssr-hint{
+	color: $oc-gray-0;
+	text-shadow: 0px 2px 12px rgba(0,0,0,1);
+	a{
+		color: $--color-link;
+		position: relative;
+		&::before{
+			z-index: 0;
+			content:"";
+			position: absolute;
+			background: $--color-link;
+			top: 100%;
+			right: 0;
+			height: 2px;
+			width: 100%;
+			transform: skew(-45deg);
+			box-shadow: 0px 2px 12px rgba(0,0,0,1);
+		}
 	}
 }
 

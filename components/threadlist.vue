@@ -1,9 +1,14 @@
 <template>
   <div class="threadlist-component">
     <h4 class="is-size-4 headline is-hidden-mobile">Active threads on /{{ selectedBoard }}/</h4>
+
+    <div class="mobile-headline-wrapper is-hidden-tablet ">
+      <h4 class="headline">Swipe to close</h4>
+      <div class="back-button" @click="closeThreadSideBar">x</div>
+    </div>
     
-    <div class="threads-wrapper" v-if="selectedBoard">
-      <a v-for="thread in threadData[selectedBoard].slice(0,threadsToShow)" :key="thread.no" :href="`https://boards.4chan.org/${selectedBoard}/thread/${thread.no}`" target="_blank" rel="noopener">
+    <div class="threads-wrapper" v-if="selectedBoard" :style="{ minHeight: elementProperties.listHeight + 'px' }">
+      <a v-for="thread in threadData[selectedBoard].slice(0,elementProperties.threadsToShow)" :key="thread.no" :href="`https://boards.4chan.org/${selectedBoard}/thread/${thread.no}`" target="_blank" rel="noopener">
         <div class="img-wrapper">
           <img :src="thread.image" referrerpolicy="same-origin" ref="img" :alt="`${selectedBoard} thread image`" @error="thread.image='https://s.4cdn.org/image/error/404/404-DanKim.gif'">
         </div>
@@ -24,26 +29,52 @@
 </template>
 
 <script>
-//const pino = require("~/assets/js/pino")
+import pino from "~/assets/js/pino"
 import { mapState } from 'vuex'
 export default {
 	data(){
 		return{
-			listHeight: 0,
-			threadsToShow: 8,
+      
 		}
 	},
 	computed: {
 		...mapState([
 			"threadData",
+			"enabledBoards",
 			"selectedBoard"
-		])
+		]),
+		elementProperties : function(){
+			const newListHeight = 36 + this.enabledBoards.length * 21
+			return {
+				listHeight: newListHeight,
+				threadsToShow: Math.max(Math.floor(newListHeight / 128),5)
+			}
+		}
 	},
 	methods: {
-    
+		revealThreadSideBar(doScrollToTop){
+			if(document.body.clientWidth >= 768) return
+			pino.debug("revealThreadSideBar")
+			document.querySelector(".threadlist-component").classList.add("thread-sidebar-revealed")
+			if(doScrollToTop){
+				document.querySelector(".component-nav").scrollIntoView({
+					behavior: "smooth",
+					block: "start"
+				})
+			}
+		},
+		closeThreadSideBar(){
+			pino.debug("closeThreadSideBar")
+			document.querySelector(".threadlist-component").classList.remove("thread-sidebar-revealed")
+		},
+		handleSwipe(direction){
+			if(direction == "right") this.closeThreadSideBar()
+			if(direction == "left") this.revealThreadSideBar(false)
+		}
 	},
 	created(){
 		if(process.browser){
+			console.log("meep")
 			this.$socket.on("connect",() => {
 				this.$store.commit("clearThreads")
 				this.$store.dispatch("getActiveThreads")
@@ -51,7 +82,14 @@ export default {
 		}
 	},
 	mounted(){
+		this.$store.subscribe(mutation => {
+			if(mutation.type == "setSelectedBoard"){
+				this.revealThreadSideBar(true)
+			}
+		})
     
+		const detectSwipe = require("~/assets/js/detectSwipe")
+		detectSwipe(document,this.handleSwipe)
 	}
 }
 </script>
@@ -102,10 +140,14 @@ export default {
 }
 
 .threads-wrapper{
+  //border-top: 4px solid rgba(255,255,255,0.8);
   display: flex;
   flex-direction: column;
   @include float-shadow-box;
-  min-height: 1548px;
+  //background: $oc-gray-9;
+  @include mobile{
+    background: $oc-gray-9;
+  }
 }
 
 a {
@@ -113,8 +155,11 @@ a {
   min-height: 125px;
   flex: 1 1 0;
   display: flex;
-  background: $oc-gray-9;
   color: $--color-text;
+  background: $--color-highlight-1;
+  &:nth-child(2n){
+    background: $--color-highlight-2;
+  }
 
   @include tablet{
     //box-shadow: 0px 0px 8px 0px rgba(0,0,0,0.25);
@@ -123,7 +168,7 @@ a {
     &:not(:last-of-type) {
       //margin-bottom: 1rem;
       >.text-wrapper {
-        border-bottom: 2px solid $oc-gray-8;
+        border-bottom: 4px solid rgba(0,0,0,0.25);
       }
     }
   }

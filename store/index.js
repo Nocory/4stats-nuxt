@@ -1,12 +1,15 @@
 import Vuex from 'vuex'
 
+import config from "~/assets/js/config.js"
+import pino from "~/assets/js/pino.js"
+import axios from "axios"
+
 const adjustActivityIfFewPosts = data =>{
 	if(data.avgPostsPerDay < 1000) data.relativeActivity -= 9999
 	return data
 }
-import config from "~/assets/js/config.js"
-import pino from "~/assets/js/pino.js"
-import axios from "axios"
+
+
 
 const createStore = () => {
 	const store = new Vuex.Store({
@@ -14,8 +17,7 @@ const createStore = () => {
 		state: {
 			enabledBoards: config.allBoards,
 			selectedBoard: "g",
-			boardData: {}, //technology
-			sortedBoards: [],
+			boardData: {},
 			threadData: config.allBoards.reduce((obj,key) => ({...obj, [key]: []}),{}),
 			sortBoardListBy: "avgPostsPerDay"
 		},
@@ -35,7 +37,10 @@ const createStore = () => {
 		mutations: {
 			setEnabledBoards(state, payload) {
 				state.enabledBoards = payload
-				localStorage.setItem("enabledBoards",JSON.stringify(payload))
+				if(process.browser){
+					localStorage.setItem("enabledBoards",JSON.stringify(payload))
+					document.cookie = `enabledBoards=${payload.length == 72 ? payload.join(',') : ''}`
+				}
 			},
 			setInitialData(state,payload){
 				for(let key in payload){
@@ -109,18 +114,12 @@ const createStore = () => {
 			},
 			nuxtServerInit (storeContext,nuxtContext) {
 				const cookie = require('cookie')
-
 				let cookies = cookie.parse(nuxtContext.req.headers.cookie || "")
-				
-				//console.log(cookies)
 
-				if(!config.allBoards.includes(nuxtContext.query.board)){
+				if(!config.allBoards.includes(nuxtContext.query.board || cookies.selectedBoard)){
 					nuxtContext.query.board = null
 				}
-				if(!config.allBoards.includes(cookies.selectedBoard)){
-					cookies.selectedBoard = null
-				}
-
+				
 				const setCookies = []
 				if(nuxtContext.query.board){
 					setCookies.push(cookie.serialize('selectedBoard', nuxtContext.query.board, {
@@ -129,17 +128,20 @@ const createStore = () => {
 				}
 				if(nuxtContext.query.sortBy){
 					setCookies.push(cookie.serialize('sortBoardListBy', nuxtContext.query.sortBy, {
-						maxAge: 60 * 60 * 24 * 365 * 2
+						maxAge: 60 * 60 * 24 * 365 * 1
 					}))
 				}
 				nuxtContext.res.setHeader('Set-Cookie', setCookies)
 				
-				const promises = []
-				
+				if(cookies.enabledBoards){
+					let enabledBoards = cookies.enabledBoards.split(",")
+					enabledBoards = enabledBoards.filter(el => config.allBoards.includes(el))
+					enabledBoards = Array.from(new Set(enabledBoards))
+					storeContext.commit("setEnabledBoards",enabledBoards)
+				}
 				storeContext.commit("setSortBy",nuxtContext.query.sortBy || cookies.sortBoardListBy || "avgPostsPerDay")
-
+				const promises = []
 				promises.push(storeContext.dispatch("boardClicked",nuxtContext.query.board || cookies.selectedBoard || config.safeInitialBoard[Math.floor(Math.random() * config.safeInitialBoard.length)]))
-
 				promises.push(axios.get(config.url + '/allBoardStats')
 					.then(function (response) {
 						storeContext.commit("setInitialData",response.data)
@@ -147,7 +149,6 @@ const createStore = () => {
 					.catch(function (error) {
 						pino.error(error)
 					}))
-
 				return Promise.all(promises)
 			}
 		}

@@ -7,7 +7,7 @@ let socket = socketIO(config.url,{
 	reconnectionDelay: 4000,
 	query: {
 		connectionType: localStorage.getItem("selectedBoard") ? 'revisit' : "new",
-		wantAllBoardStats: false
+		dontSendBoards: true
 	}
 })
 
@@ -33,7 +33,7 @@ socket.on("connect",() => {
 	pino.debug("Socket connected")
 	socket.io.opts.query = {
 		connectionType: 'foreground',
-		wantAllBoardStats: true
+		dontSendBoards: false
 	}
 })
 

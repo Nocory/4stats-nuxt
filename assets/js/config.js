@@ -4,11 +4,13 @@ if(process.browser && localStorage.getItem("VERSION") != VERSION){
 	localStorage.setItem("VERSION",VERSION)
 }
 
+console.log()
+
 const config = {
 	VERSION,
 	debugLevelProduction: "info",
 	debugLevelDevelopment: "trace",
-	url: "https://api.4stats.io",
+	url: process.env.NODE_ENV == "production" && process.server ? "http://localhost:4001" : "https://api.4stats.io",
 	safeInitialBoard : ["3","an","ck","diy","g","gd","his","lit","n","news","o","out","p","po","sci","tg","trv","vr","wg"],
 	availableBoards : {
 		main: [
